@@ -246,7 +246,7 @@
     "
 
     # 2. MEMBUAT SCHEDULER OTOMATIS (23:55:00)
-    /system scheduler add name="JALANKAN-LAPORAN-MIKHMON" start-time=23:59:00 interval=1d policy=read,write,policy,test on-event="/system script run LAPORAN-PENJUALAN-VOUCHER"
+    /system scheduler add name="JALANKAN-LAPORAN-MIKHMON" start-time=23:55:00 interval=1d policy=read,write,policy,test on-event="/system script run LAPORAN-PENJUALAN-VOUCHER"
     
     :log info "SUKSES: Arsitektur Skrip Laporan Utama Berhasil Terpasang Otomatis dari GitHub!"
 }
