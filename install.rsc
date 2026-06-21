@@ -232,22 +232,7 @@
     :log info (\"Pembersihan dilewati. File target \" . \$targetOldFile . \" tidak ditemukan.\")
 }
 
-
-:local schedName \"JALANKAN-LAPORAN-MIKHMON\"
-:local startTime \"23:55:00\"
-:local schedInterval \"1d 00:00:00\"
-:local schedPolicy \"ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon\"
-:local schedEvent \"/system script run LAPORAN-PENJUALAN-VOUCHER\"
-
-/system scheduler
-:if ([:len [find name=\$schedName]] = 0) do={
-    add name=\$schedName start-time=\$startTime interval=\$schedInterval policy=\$schedPolicy on-event=\$schedEvent
-    :put \"Scheduler baru berhasil dibuat.\"
-} else={
-    set [find name=\$schedName] start-time=\$startTime interval=\$schedInterval policy=\$schedPolicy on-event=\$schedEvent
-    :put \"Scheduler lama berhasil diperbarui.\"
-}
-
+    /system scheduler add name="JALANKAN-LAPORAN-MIKHMON" start-time=23:55:00 interval=1d policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon on-event="/system script run LAPORAN-PENJUALAN-VOUCHER"
     
     :log info "SUKSES: Arsitektur Skrip Laporan Utama Berhasil Terpasang Otomatis dari GitHub!"
 }
