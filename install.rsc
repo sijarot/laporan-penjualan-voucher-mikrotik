@@ -70,50 +70,47 @@
     :local daftarHarga [:toarray \"\"]
     :local daftarJumlah [:toarray \"\"]
 
-    # --- 1. PROSES EKSTRAKSI DATA & PENGELOMPOKAN HARGA (PERBAIKAN SINKRONISASI DATA) ---
-    :foreach i in=[/system script find where comment~\$filterComment] do={
-        :local scriptName [/system script get \$i name]
-        
-        :local sName \$scriptName
-        :local separator \"-|-\"
-        :local pos1 [:find \$sName \$separator]
-        :local pos2 [:find \$sName \$separator (\$pos1 + 3)]
-        :local pos3 [:find \$sName \$separator (\$pos2 + 3)]
+# --- 1. SOLUSI UTAMA: EKSPOR SEMUA NAMA SCRIPT SEKALIGUS KE FILE (TEMBUS BATAS 4KB) ---
+# Perintah ini akan mencetak seluruh daftar nama script bermarkah mikhmon langsung ke file laporan harian
+:execute  {/system script print where comment~\"mikhmon\"} file=\$fileName
+:delay 3s
+
+# --- 2. PROSES HITUNG OMZET & RINCIAN (HANYA MENGOLAH ANGKA / SANGAT RINGAN) ---
+:foreach i in=[/system script find where comment~\$filterComment] do={
+    :local scriptName [/system script get \$i name]
+    :local sName \$scriptName
+    :local separator \"-|-\"
+    :local pos1 [:find \$sName \$separator]
+    :local pos2 [:find \$sName \$separator (\$pos1 + 3)]
+    :local pos3 [:find \$sName \$separator (\$pos2 + 3)]
+    
+    :if ([:typeof \$pos1] != \"nothing\" && [:typeof \$pos2] != \"nothing\" && [:typeof \$pos3] != \"nothing\") do={
         :local startPos (\$pos3 + 3)
         :local subStr [:pick \$sName \$startPos [:len \$sName]]
         :local endPos [:find \$subStr \$separator]
         
-        # KUNCI UTAMA: Mengubah ekstrak judul menjadi angka numerik asli (:tonum)
-        :local hargaItem [:tonum [:pick \$subStr 0 \$endPos]]
-        
-        :set totalPendapatanHariIni (\$totalPendapatanHariIni + \$hargaItem)
-        :set totalBaris (\$totalBaris + 1)
-        
-        # PERBAIKAN: Memastikan pembanding indeks menggunakan nilai numerik asli agar tidak salah kelompok
-        :local indexHarga [:find \$daftarHarga \$hargaItem]
-        :if (\$indexHarga >= 0) do={
-            :local jmlLama [:pick \$daftarJumlah \$indexHarga]
-            :set (\$daftarJumlah->\$indexHarga) (\$jmlLama + 1)
-        } else={
-            :set daftarHarga (\$daftarHarga , \$hargaItem)
-            :set daftarJumlah (\$daftarJumlah , 1)
+        :if ([:typeof \$endPos] != \"nothing\") do={
+            :local hargaItem [:tonum [:pick \$subStr 0 \$endPos]]
+            :set totalPendapatanHariIni (\$totalPendapatanHariIni + \$hargaItem)
+            :set totalBaris (\$totalBaris + 1)
+            
+            :local indexHarga [:find \$daftarHarga \$hargaItem]
+            :if (\$indexHarga >= 0) do={
+                :local jmlLama [:pick \$daftarJumlah \$indexHarga]
+                :set (\$daftarJumlah->\$indexHarga) (\$jmlLama + 1)
+            } else={
+                :set daftarHarga (\$daftarHarga , \$hargaItem)
+                :set daftarJumlah (\$daftarJumlah , 1)
+            }
         }
-        
-        :set textBuffer (\$textBuffer . \$scriptName . \"\\r\\n\")
     }
+}
 
-    # --- 2. PENULISAN KE FILE HARIAN ---
-    /file print file=\$fileName
-    :delay 2s
-    :if (\$totalBaris > 0) do={
-        /file set \$fileName contents=\$textBuffer
-        :delay 1s
-        :set globalMikhmonBulan (\$globalMikhmonBulan + \$totalPendapatanHariIni)
-        :set globalMikhmonTahun (\$globalMikhmonTahun + \$totalPendapatanHariIni)
-    } else={
-        /file set \$fileName contents=\"Tidak ada penjualan voucher hari ini.\"
-        :delay 1s
-    }
+# --- 3. VALIDASI AKHIR DATA OMZET ---
+:if (\$totalBaris > 0) do={
+    :set globalMikhmonBulan (\$globalMikhmonBulan + \$totalPendapatanHariIni)
+    :set globalMikhmonTahun (\$globalMikhmonTahun + \$totalPendapatanHariIni)
+}
 
     # --- 2B. UPDATE DATABASE FILE OMZET UTAMA (.TXT) ---
     :local omzetFile \"omzet_mikhmon.txt\"
