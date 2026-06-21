@@ -33,9 +33,44 @@
 :if (\$mIdx = 10) do={ :set monthNum \"11\" }
 :if (\$mIdx = 11) do={ :set monthNum \"12\" }
 
-:if ([:pick \$meshDay 0 1] = \" \") do={ :set meshDay (\"0\" . [:pick \$meshDay 1 2]) }
+# --- DETEKSI OTOMATIS VERSI ROUTEROS ---
+:local osVersion [/system resource get version]
+:local majorVer 0
+:local minorVer 0
 
-:local cleanDate (\$meshYear . \"-\" . \$monthNum . \"-\" . \$meshDay)
+# Mengambil angka major dan minor (Contoh: \"7.12\" -> major: 7, minor: 12)
+:local dotPos [:find \$osVersion \".\"]
+:if ([:typeof \$dotPos] != \"nothing\") do={
+  :set majorVer [:tonum [:pick \$osVersion 0 \$dotPos]]
+  :local subStr [:pick \$osVersion (\$dotPos + 1) [:len \$osVersion]]
+  :local nextDot [:find \$subStr \".\"]
+  :if ([:typeof \$nextDot] != \"nothing\") do={
+    :set minorVer [:tonum [:pick \$subStr 0 \$nextDot]]
+  } else={
+    # Jika versi hanya berupa 2 digit seperti \"7.7\" atau \"7.6\" tanpa patch-version
+    :local spacePos [:find \$subStr \" \"]
+    :if ([:typeof \$spacePos] != \"nothing\") do={
+      :set minorVer [:tonum [:pick \$subStr 0 \$spacePos]]
+    } else={
+      :set minorVer [:tonum \$subStr]
+    }
+  }
+}
+
+# --- LOGIKA KONDISIONAL FORMAT TANGGAL ---
+:local cleanDate \"\"
+
+# Kondisi jika RouterOS v7.7 ke atas
+:if (\$majorVer > 7 || (\$majorVer = 7 && \$minorVer >= 7)) do={
+  # Pada v7.7+, format default [/system clock get date] sudah \"yyyy-mm-dd\" (Contoh: 2026-06-16)
+  :set cleanDate [/system clock get date]
+} else={
+  # Pada v7.6 ke bawah, format default masih \"mmm/dd/yyyy\" (Contoh: jun/16/2026)
+  # Menggunakan variabel pemotong string yang sudah Anda buat sebelumnya
+  :set cleanDate (\$meshYear . \"-\" . \$monthNum . \"-\" . \$meshDay)
+}
+
+
 :local fileName (\"laporan_mikhmon_\" . \$cleanDate . \".txt\")
 :local filterComment \"mikhmon\"
 
