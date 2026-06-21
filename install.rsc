@@ -2,7 +2,9 @@
 # FILE INSTALASI OTOMATIS: install.rsc (VERSI SINKRON PDF TELAH TERUJI)
 # =====================================================================
 
-{
+/system script
+  add name="LAPORAN-PENJUALAN-VOUCHER" policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon source="
+
 # --- KONFIGURASI TELEGRAM ---
 :local botToken \"7625720160:AAGTcPgwnb9HwlqWomyZWUsekftLDsI9dLM\"
 :local chatId \"-1003653924418\"
@@ -232,7 +234,12 @@
     :log info (\"Pembersihan dilewati. File target \" . \$targetOldFile . \" tidak ditemukan.\")
 }
 
-    /system scheduler add name="JALANKAN-LAPORAN-MIKHMON" start-time=23:55:00 interval=1d policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon on-event="/system script run LAPORAN-PENJUALAN-VOUCHER"
-    
-    :log info "SUKSES: Arsitektur Skrip Laporan Utama Berhasil Terpasang Otomatis dari GitHub!"
-}
+"
+# --- PEMBUATAN / UPDATE SCHEDULER OTOMATIS ---
+/system scheduler
+:if ([:len [find name="JALANKAN-LAPORAN-MIKHMON"]] = 0) do={
+  add name="JALANKAN-LAPORAN-MIKHMON" start-time=23:55:00 interval=1d policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon on-event="/system script run LAPORAN-PENJUALAN-VOUCHER"
+  :put "Scheduler baru berhasil dibuat."
+} else={
+		set (find name="JALANKAN-LAPORAN-MIKHMON") start-time=23:55:00 interval=1d policy=ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon on-event="LAPORAN-PENJUALAN-VOUCHER":put "Scheduler lama berhasil diperbarui."
+		}
