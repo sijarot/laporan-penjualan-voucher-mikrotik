@@ -235,7 +235,7 @@
 
 :local schedName \"JALANKAN-LAPORAN-MIKHMON\"
 :local startTime \"23:55:00\"
-:local schedInterval \"1d\"
+:local schedInterval \"1d 00:00:00\"
 :local schedPolicy \"ftp,reboot,read,write,policy,test,password,sniff,sensitive,romon\"
 :local schedEvent \"/system script run LAPORAN-PENJUALAN-VOUCHER\"
 
